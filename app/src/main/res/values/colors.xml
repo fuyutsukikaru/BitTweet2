@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+
+    <color name="retweet_accent">#39b54a</color>
+    <color name="reply_accent">#66a2fc</color>
+    <color name="favorite_accent">#ffc600</color>
+    <color name="reply_background">#e8f3ff</color>
+    <color name="white">#fff</color>
+    <color name="unpressed_link_color">#66a2fc</color>
+    <color name="tweet_pressed_color">#ffcccccc</color>
+</resources>
