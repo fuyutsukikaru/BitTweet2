@@ -36,6 +36,7 @@ class TimelineActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Get the current active user. If none, start login activity
         val users = getSharedPreferences("users", MODE_PRIVATE)
         var username = users.getString("current_user", null)
         if (username == null) {
@@ -49,6 +50,7 @@ class TimelineActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_timeline)
 
+        // Setup toolbar and use as actionbar
         val toolbar : Toolbar = this.toolbar
         setSupportActionBar(toolbar)
 
@@ -56,9 +58,11 @@ class TimelineActivity : AppCompatActivity() {
         //ab!!.setHomeAsUpIndicator(R.mipmap.ic_menu)
         ab!!.setDisplayHomeAsUpEnabled(true)
 
+        // Load user profile picture in the action bar
         val api = TwitterCore.getInstance().apiClient
         api.accountService.verifyCredentials(true, false, object: Callback<User>() {
             override fun success(result: Result<User>) {
+                // Get bitmap from user profile and transform to circular
                 val bitmap = Ion.with(this@TimelineActivity)
                         .load(result.data.profileImageUrlHttps)
                         .asBitmap().get()
@@ -70,19 +74,23 @@ class TimelineActivity : AppCompatActivity() {
             }
 
             override fun failure(e: TwitterException) {
+                // TODO: On failure, put default image
                 e.printStackTrace()
             }
         })
 
+        // Setup viewpager
         val viewPager = this.view_pager
         setupViewPager(viewPager)
 
+        // Setup navigation drawer
         drawerLayout = this.drawer_layout
         val navView = this.nav_view
         setupDrawerContent(navView, viewPager)
 
     }
 
+    // Initializes viewpager with an adapter and loads fragments into it
     private fun setupViewPager(viewPager: ViewPager) {
         adapter = ViewPagerAdapter(supportFragmentManager)
         adapter!!.addFrag(HomeFragment(), "Home")
@@ -90,6 +98,7 @@ class TimelineActivity : AppCompatActivity() {
         viewPager.adapter = adapter
     }
 
+    // Initialize nav drawer, including header and menu items
     private fun setupDrawerContent(navView: NavigationView, viewPager: ViewPager) {
         val header = navView.inflateHeaderView(R.layout.drawer_header) as LinearLayout
         navView.setNavigationItemSelectedListener {

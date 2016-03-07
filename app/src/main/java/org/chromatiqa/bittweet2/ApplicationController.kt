@@ -10,6 +10,7 @@ class ApplicationController : Application() {
     val TWITTER_KEY : String = "1N1fsuVO2VSYgzu690kxA";
     val TWITTER_SECRET : String = "QFLtPeggR6UOPWF3cDHcNmLaZMJ8aTf7ewIyPVNfg";
 
+    // Setup static singleton for Application
     companion object {
         var singleton: ApplicationController? = null
             get(): ApplicationController? = singleton
@@ -19,6 +20,7 @@ class ApplicationController : Application() {
         super.onCreate()
         singleton = this
 
+        // Load the Twitter Fabric authconfigs
         val authConfig : TwitterAuthConfig = TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
         Fabric.with(this, Twitter(authConfig))
     }

@@ -34,6 +34,7 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
 
     val tweets = arrayListOf<Tweet>()
 
+    // Setup static viewholder object
     companion object {
         class TweetViewHolder(v: View) : RecyclerView.ViewHolder(v) {
             val avatarImage = v.avatar
@@ -50,8 +51,10 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
         }
     }
 
+    // Load tweets into adapter
     fun putTweets(list: List<Tweet>) {
         tweets.addAll(0, list)
+        // If new tweets were added, keep scroll position
         if (list.size > 0) {
             notifyItemRangeInserted(0, list.size)
         } else {
@@ -65,6 +68,7 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
     }
 
     override fun onBindSwipeViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        // Cast holder to TweetViewHolder and retrieve tweet at position
         val h = holder as TweetViewHolder
         var tweet = tweets[position]
 
@@ -75,6 +79,7 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
         h.accent.visibility = View.GONE
         h.rtBy.visibility = View.GONE
 
+        // Setup retweetedBy string if retweeted
         var retweetedBy: String? = null
         if (tweet.retweetCount > 0) {
             retweetedBy = if (tweet.retweeted) {
@@ -85,6 +90,7 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
             tweet = tweet.retweetedStatus ?: tweet
         }
 
+        // Setup highlight accent and tweet background color
         if (tweet.favorited) {
             h.accent.visibility = View.VISIBLE
             h.accent.setBackgroundColor(ContextCompat.getColor(context, R.color.favorite_accent))
@@ -103,6 +109,7 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
         h.username.text = "@" + tweet.user.screenName
         h.displayname.text = tweet.user.name
 
+        // Setup date display based on when the tweet was made
         val date = SimpleDateFormat("E MMM dd K:mm:ss Z yyyy").parse(tweet.createdAt)
         val time = Date().time - date.time
         h.time.text = if (time / (1000 * 60) < 1) {
@@ -117,6 +124,7 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
             SimpleDateFormat("MMM dd, yyyy").format(date)
         }
 
+        // Load profile image into tweet
         Ion.with(h.avatarImage)
             .resize(150, 150)
             .transform(RoundedTransformation(250.0F, 0.0F, true, true, true, true))
@@ -127,8 +135,11 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
             it -> it.mediaUrlHttps
         }
 
+        // Regex patterns for matching urls with images
+        // TODO: Add more sources (twitpic, minus), YouTube, Vines, and GIFs
         val imageID = Regex("^https?://(?:[a-z\\-]+\\.)+[a-z]{2,6}(?:/[^/#?]+)+\\.(?:jpe?g|gif|png)$")
         val pixivID = Pattern.compile("^http://www\\.pixiv\\.net/(member_illust|index)\\.php\\?(?=.*mode=(medium|big))(?=.*illust_id=([0-9]+)).*$", Pattern.CASE_INSENSITIVE)
+        // Get the full url of links that match the specified regex
         val urls = tweet.extendedEtities?.urls?.map {
             it.expandedUrl
         }?.filter {
@@ -142,18 +153,18 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
             }
         }
 
+        // Replace links in tweet with expanded media and url links
         var replaced_tweet = tweet.text
-
         tweet.extendedEtities?.media?.forEach {
             replaced_tweet = replaced_tweet.replace(it.url, it.displayUrl)
         }
-
         tweet.extendedEtities?.urls?.forEach {
             replaced_tweet = replaced_tweet.replace(it.url, it.displayUrl)
         }
-
         h.tweet.text = replaced_tweet
 
+        // Set links to be clickable as well as applying styles on them
+        // TODO: Make this work or find new library
         if (tweet.extendedEtities != null) {
             val linkUrls = if (tweet.extendedEtities.urls != null) {
                 getLinks(tweet.extendedEtities.urls).filterNotNull()
@@ -178,6 +189,7 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
             }
         }
 
+        // Setup image previews
         if (media != null && media.size > 0) {
             listToView(media, h)
         } else if (urls != null && urls.size > 0) {
@@ -185,6 +197,7 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
         }
     }
 
+    // Take in a list of entities and transform to a list of Links
     private fun <A> getLinks(links: List<A>) : List<Link?> = links?.map {
         when(it) {
             is UrlEntity -> Link(it.displayUrl)
@@ -220,6 +233,7 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
         }
     }
 
+    // Set the image asynchronously into the imageview with transformations
     private fun setImage(v: ImageView, width: Int, height: Int, tl: Boolean, tr: Boolean, bl: Boolean, br: Boolean, url: String) {
         Ion.with(v)
             .error(R.mipmap.ic_launcher)
@@ -229,11 +243,15 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
             .load(url)
     }
 
+    // Load image previews with proper transformation and setup onclick method
     private fun listToView(list: List<String>, h: TweetViewHolder) {
         h.previewContainer.viewTreeObserver.addOnPreDrawListener(object: ViewTreeObserver.OnPreDrawListener {
+            // Necessary to measure the size of the imageview before it is drawn
             override fun onPreDraw(): Boolean {
                 h.previewContainer.viewTreeObserver.removeOnPreDrawListener(this)
                 val width = h.previewContainer.width
+                // Match to number of urls (up to 4) and load previews
+                // TODO: Make this cleaner if possible
                 when(list.size) {
                     1 -> {
                         setImage(h.prevList[0], width, width * 5/8, true, true, true, true, list[0])
@@ -266,6 +284,7 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
                         }
                     }
                 }
+                // Setup onclicklistener for each image preview
                 h.prevList.forEachIndexed {
                     index, it -> it.setOnClickListener {
                         //val bitmap = Bitmap.createBitmap(it.width, it.height, Bitmap.Config.ARGB_8888)
@@ -281,6 +300,8 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
         })
     }
 
+    // Setup the configurations for the swipe recyclerview, which allows for actions on swipe
+    // TODO: Add in icons for each swipe behavior and mess with the swipe behavior responses
     override fun onCreateSwipeConfiguration(context: Context, position: Int): SwipeConfiguration =
             SwipeConfiguration.Builder(context)
                     .setRightBackgroundColorResource(R.color.retweet_accent)
@@ -289,6 +310,8 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
                     .setLeftSwipeBehaviour(0.8F, { 1.0F })
                     .build()
 
+    // Setup actions on the swipe direction
+    // TODO: Add in functionality for swipe to Reply and swipe to Like
     override fun onSwipe(position: Int, direction: Int) {
         if (direction == SWIPE_LEFT) {
             System.err.println("LEFT")
@@ -299,5 +322,6 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
 
     override fun getItemCount(): Int = tweets.size
 
+    // Get the id of the tweet at the top of the list in order to load new tweets starting from top
     fun getTopId(): Long? = if (tweets.size == 0) null else tweets.first().id
 }
