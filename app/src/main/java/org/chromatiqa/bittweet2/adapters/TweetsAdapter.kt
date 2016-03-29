@@ -15,12 +15,14 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.view.animation.Interpolator
 import android.widget.ImageView
+import android.widget.Toast
 import com.klinker.android.link_builder.Link
 import com.klinker.android.link_builder.LinkBuilder
 import com.koushikdutta.ion.Ion
 import com.tr4android.recyclerviewslideitem.SwipeAdapter
 import com.tr4android.recyclerviewslideitem.SwipeConfiguration
 import com.twitter.sdk.android.core.models.*
+import kotlinx.android.synthetic.main.activity_timeline.*
 import org.chromatiqa.bittweet2.R
 import java.util.*
 import kotlinx.android.synthetic.main.row_tweet.view.*
@@ -306,8 +308,10 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
             SwipeConfiguration.Builder(context)
                     .setRightBackgroundColorResource(R.color.retweet_accent)
                     .setLeftBackgroundColorResource(R.color.favorite_accent)
-                    .setRightSwipeBehaviour(0.8F, { 1.0F })
-                    .setLeftSwipeBehaviour(0.8F, { 1.0F })
+                    .setRightDrawableResource(R.mipmap.ic_reply_black_24dp)
+                    .setLeftDrawableResource(R.mipmap.ic_star_border_black_24dp)
+                    .setRightSwipeBehaviour(SwipeConfiguration.SwipeBehaviour.RESTRICTED_SWIPE)
+                    .setLeftSwipeBehaviour(SwipeConfiguration.SwipeBehaviour.RESTRICTED_SWIPE)
                     .build()
 
     // Setup actions on the swipe direction
@@ -315,8 +319,10 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
     override fun onSwipe(position: Int, direction: Int) {
         if (direction == SWIPE_LEFT) {
             System.err.println("LEFT")
+            Snackbar.make(frag.activity.view_pager, fav_responses[Math.floor(Math.random() * fav_responses.size).toInt()], Snackbar.LENGTH_LONG).show()
         } else {
             System.err.println("RIGHT")
+            Snackbar.make(frag.activity.view_pager, "This feature has been deemed illegal by the tweet police. Thanks Benson.", Snackbar.LENGTH_LONG).show()
         }
     }
 
@@ -324,4 +330,12 @@ class TweetsAdapter(val context: Context, val userId: Long, val frag: Fragment) 
 
     // Get the id of the tweet at the top of the list in order to load new tweets starting from top
     fun getTopId(): Long? = if (tweets.size == 0) null else tweets.first().id
+
+    val fav_responses = listOf<String>(
+            "You though you had stars, but nope.",
+            "Stars? Aikatsu Stars.",
+            "All your base belong to us.",
+            "You wish you could favorite all these dank memes, don't you.",
+            "Thank Benson for the stars."
+    )
 }
